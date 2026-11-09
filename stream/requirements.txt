@@ -1,0 +1,28 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# stream/requirements.txt
+# Python 3.11 — Kafka stream processor dependencies
+# Install: pip install -r requirements.txt
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Kafka ─────────────────────────────────────────────────────────────────────
+confluent-kafka==2.5.0
+
+# ── Database drivers ─────────────────────────────────────────────────────────
+pymongo==4.8.0
+motor==3.5.0                   # async MongoDB driver
+redis==5.0.8
+
+# ── Data validation ───────────────────────────────────────────────────────────
+pydantic==2.8.2
+jsonschema==4.23.0
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+python-dotenv==1.0.1
+loguru==0.7.2
+python-dateutil==2.9.0
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+pytest==8.3.2
+pytest-cov==5.0.0
+pytest-asyncio==0.23.8
+freezegun==1.5.1               # time mocking for window tests

@@ -1,0 +1,30 @@
+{
+  "name": "pravaah",
+  "version": "1.0.0",
+  "description": "PRAVAAH – AI-powered city-wide vehicle tracking & traffic intelligence platform (SIH 2026)",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend",
+    "scripts"
+  ],
+  "scripts": {
+    "infra:up": "docker-compose -f infra/docker-compose.yml up -d",
+    "infra:down": "docker-compose -f infra/docker-compose.yml down",
+    "infra:reset": "docker-compose -f infra/docker-compose.yml down -v",
+    "infra:logs": "docker-compose -f infra/docker-compose.yml logs -f",
+    "infra:ps": "docker-compose -f infra/docker-compose.yml ps",
+    "build:shared": "npm run build --workspace=shared",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "test:shared": "npm run test --workspace=shared",
+    "test:backend": "npm run test --workspace=backend",
+    "seed": "npm run seed --workspace=scripts",
+    "replay": "npm run replay --workspace=scripts"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

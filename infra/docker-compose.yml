@@ -1,0 +1,186 @@
+version: "3.9"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PRAVAAH – Infrastructure Docker Compose
+# Starts: Kafka (KRaft, single broker), MongoDB 7, Redis 7, Mongo-Express (dev UI)
+#
+# Usage:
+#   docker-compose -f infra/docker-compose.yml up -d          # start all
+#   docker-compose -f infra/docker-compose.yml down -v        # stop + wipe volumes
+#   docker-compose -f infra/docker-compose.yml logs -f kafka  # tail kafka logs
+# ═══════════════════════════════════════════════════════════════════════════════
+
+networks:
+  pravaah-net:
+    driver: bridge
+    name: pravaah-net
+
+volumes:
+  mongo-data:
+    name: pravaah-mongo-data
+  redis-data:
+    name: pravaah-redis-data
+  kafka-data:
+    name: pravaah-kafka-data
+
+services:
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Kafka – KRaft mode (no Zookeeper)
+  # ─────────────────────────────────────────────────────────────────────────────
+  kafka:
+    image: bitnamilegacy/kafka:3.7
+    container_name: pravaah-kafka
+    hostname: kafka
+    networks:
+      - pravaah-net
+    ports:
+      - "9092:9092"       # broker (host access)
+      - "9094:9094"       # external listener (optional tooling)
+    volumes:
+      - kafka-data:/bitnamilegacy/kafka
+    environment:
+      # KRaft settings — no Zookeeper
+      KAFKA_CFG_NODE_ID: "1"
+      KAFKA_CFG_PROCESS_ROLES: "controller,broker"
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+
+      # Listeners
+      KAFKA_CFG_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094"
+      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094"
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+
+      # Topic defaults
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_CFG_NUM_PARTITIONS: "3"
+      KAFKA_CFG_DEFAULT_REPLICATION_FACTOR: "1"
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+
+      # Log retention (keep 7 days or 1 GB per partition)
+      KAFKA_CFG_LOG_RETENTION_HOURS: "168"
+      KAFKA_CFG_LOG_RETENTION_BYTES: "1073741824"
+
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Kafka Topic Initialiser — one-shot container
+  # Creates: detections (3p), alerts (1p), analytics (1p)
+  # ─────────────────────────────────────────────────────────────────────────────
+  kafka-init:
+    image: bitnamilegacy/kafka:3.7
+    container_name: pravaah-kafka-init
+    networks:
+      - pravaah-net
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./kafka/create-topics.sh:/opt/create-topics.sh:ro
+    entrypoint: ["bash", "/opt/create-topics.sh"]
+    restart: "no"
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # MongoDB 7
+  # ─────────────────────────────────────────────────────────────────────────────
+  mongodb:
+    image: mongo:7.0
+    container_name: pravaah-mongodb
+    hostname: mongodb
+    networks:
+      - pravaah-net
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./mongo/init-db.js:/docker-entrypoint-initdb.d/01-init-db.js:ro
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-changeme}
+      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME:-pravaah}
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Redis 7
+  # ─────────────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7.2-alpine
+    container_name: pravaah-redis
+    hostname: redis
+    networks:
+      - pravaah-net
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass ${REDIS_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping | grep PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Mongo Express — dev-only browser UI for MongoDB
+  # Access: http://localhost:8081  (disable in production)
+  # ─────────────────────────────────────────────────────────────────────────────
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: pravaah-mongo-express
+    networks:
+      - pravaah-net
+    ports:
+      - "8081:8081"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USER:-root}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD:-changeme}
+      ME_CONFIG_MONGODB_URL: "mongodb://${MONGO_ROOT_USER:-root}:${MONGO_ROOT_PASSWORD:-changeme}@mongodb:27017/"
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: pravaah_dev
+    restart: unless-stopped
+    profiles:
+      - dev        # only starts with: docker-compose --profile dev up
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Kafka UI (Provectus) — dev-only browser UI for Kafka
+  # Access: http://localhost:8080
+  # ─────────────────────────────────────────────────────────────────────────────
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    container_name: pravaah-kafka-ui
+    networks:
+      - pravaah-net
+    ports:
+      - "8080:8080"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_CLUSTERS_0_NAME: pravaah-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      DYNAMIC_CONFIG_ENABLED: "true"
+    restart: unless-stopped
+    profiles:
+      - dev        # only starts with: docker-compose --profile dev up

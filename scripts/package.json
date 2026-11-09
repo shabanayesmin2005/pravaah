@@ -1,0 +1,27 @@
+{
+  "name": "@pravaah/scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PRAVAAH seed and replay scripts",
+  "type": "commonjs",
+  "scripts": {
+    "seed": "tsx seed.ts",
+    "replay": "tsx replay.ts"
+  },
+  "dependencies": {
+    "@pravaah/shared": "*",
+    "mongoose": "^8.5.3",
+    "kafkajs": "^2.2.4",
+    "bcryptjs": "^2.4.3",
+    "uuid": "^10.0.0",
+    "dotenv": "^16.4.5",
+    "date-fns": "^3.6.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/uuid": "^10.0.0",
+    "@types/node": "^20.14.11",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.4"
+  }
+}

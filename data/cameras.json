@@ -1,0 +1,400 @@
+{
+  "cameras": [
+    {
+      "id": "CAM_001",
+      "name": "Connaught Place – Inner Circle",
+      "location": { "lat": 28.6315, "lng": 77.2167 },
+      "address": "Inner Circle, Connaught Place, New Delhi 110001",
+      "zone": "commercial",
+      "rtsp_url": "sim://videos/sample_01.mp4",
+      "active": true,
+      "installed_at": "2025-01-15T00:00:00Z"
+    },
+    {
+      "id": "CAM_002",
+      "name": "India Gate – Kartavya Path East",
+      "location": { "lat": 28.6129, "lng": 77.2295 },
+      "address": "Kartavya Path, India Gate, New Delhi 110001",
+      "zone": "restricted",
+      "rtsp_url": "sim://videos/sample_02.mp4",
+      "active": true,
+      "installed_at": "2025-01-15T00:00:00Z"
+    },
+    {
+      "id": "CAM_003",
+      "name": "ITO Chowk – Bahadur Shah Zafar Marg",
+      "location": { "lat": 28.6286, "lng": 77.2410 },
+      "address": "ITO Intersection, Bahadur Shah Zafar Marg, New Delhi 110002",
+      "zone": "commercial",
+      "rtsp_url": "sim://videos/sample_03.mp4",
+      "active": true,
+      "installed_at": "2025-01-20T00:00:00Z"
+    },
+    {
+      "id": "CAM_004",
+      "name": "Kashmere Gate – Ring Road Junction",
+      "location": { "lat": 28.6671, "lng": 77.2285 },
+      "address": "Kashmere Gate, Outer Ring Road, Delhi 110006",
+      "zone": "transit",
+      "rtsp_url": "sim://videos/sample_04.mp4",
+      "active": true,
+      "installed_at": "2025-02-01T00:00:00Z"
+    },
+    {
+      "id": "CAM_005",
+      "name": "Anand Vihar ISBT – NH-9 Entry",
+      "location": { "lat": 28.6469, "lng": 77.3159 },
+      "address": "Anand Vihar ISBT, NH-9, Delhi 110092",
+      "zone": "transit",
+      "rtsp_url": "sim://videos/sample_05.mp4",
+      "active": true,
+      "installed_at": "2025-02-01T00:00:00Z"
+    },
+    {
+      "id": "CAM_006",
+      "name": "Lajpat Nagar Metro – Ring Road",
+      "location": { "lat": 28.5684, "lng": 77.2374 },
+      "address": "Lajpat Nagar Metro Station, Ring Road, New Delhi 110024",
+      "zone": "commercial",
+      "rtsp_url": "sim://videos/sample_06.mp4",
+      "active": true,
+      "installed_at": "2025-02-10T00:00:00Z"
+    },
+    {
+      "id": "CAM_007",
+      "name": "Nehru Place – Outer Ring Road",
+      "location": { "lat": 28.5491, "lng": 77.2543 },
+      "address": "Nehru Place, Outer Ring Road, New Delhi 110019",
+      "zone": "commercial",
+      "rtsp_url": "sim://videos/sample_07.mp4",
+      "active": true,
+      "installed_at": "2025-02-10T00:00:00Z"
+    },
+    {
+      "id": "CAM_008",
+      "name": "Dwarka Sector 10 Metro – NH-48",
+      "location": { "lat": 28.5940, "lng": 77.0387 },
+      "address": "Dwarka Sector 10 Metro Station, NH-48, Delhi 110075",
+      "zone": "residential",
+      "rtsp_url": "sim://videos/sample_08.mp4",
+      "active": true,
+      "installed_at": "2025-03-01T00:00:00Z"
+    },
+    {
+      "id": "CAM_009",
+      "name": "Rohini Sector 15 Metro – Outer Ring Road",
+      "location": { "lat": 28.7225, "lng": 77.1226 },
+      "address": "Rohini Sector 15 Metro Station, Outer Ring Road, Delhi 110085",
+      "zone": "residential",
+      "rtsp_url": "sim://videos/sample_09.mp4",
+      "active": true,
+      "installed_at": "2025-03-01T00:00:00Z"
+    },
+    {
+      "id": "CAM_010",
+      "name": "Noida Sector 18 Metro – NH-9 / DND",
+      "location": { "lat": 28.5679, "lng": 77.3200 },
+      "address": "Noida Sector 18 Metro Station, NH-9, Noida 201301",
+      "zone": "commercial",
+      "rtsp_url": "sim://videos/sample_10.mp4",
+      "active": true,
+      "installed_at": "2025-03-15T00:00:00Z"
+    }
+  ],
+  "adjacency_graph": {
+    "_comment": "Edges represent direct road-connected camera pairs. Both directions stored. Distances are approximate road distances in metres. min_travel_s = distance at 60 km/h (max speed); max_travel_s = distance at 10 km/h × 1.5 (heavy congestion buffer). Vehicles appearing faster than min_travel_s trigger IMPOSSIBLE_TRAVEL.",
+    "edges": [
+      {
+        "from": "CAM_001",
+        "to": "CAM_002",
+        "road_name": "Rajpath / Kartavya Path",
+        "distance_m": 1400,
+        "min_travel_s": 84,
+        "max_travel_s": 756
+      },
+      {
+        "from": "CAM_002",
+        "to": "CAM_001",
+        "road_name": "Rajpath / Kartavya Path",
+        "distance_m": 1400,
+        "min_travel_s": 84,
+        "max_travel_s": 756
+      },
+      {
+        "from": "CAM_001",
+        "to": "CAM_003",
+        "road_name": "Bahadur Shah Zafar Marg",
+        "distance_m": 2800,
+        "min_travel_s": 168,
+        "max_travel_s": 1512
+      },
+      {
+        "from": "CAM_003",
+        "to": "CAM_001",
+        "road_name": "Bahadur Shah Zafar Marg",
+        "distance_m": 2800,
+        "min_travel_s": 168,
+        "max_travel_s": 1512
+      },
+      {
+        "from": "CAM_001",
+        "to": "CAM_004",
+        "road_name": "Qutab Road / Lothian Road",
+        "distance_m": 4200,
+        "min_travel_s": 252,
+        "max_travel_s": 2268
+      },
+      {
+        "from": "CAM_004",
+        "to": "CAM_001",
+        "road_name": "Qutab Road / Lothian Road",
+        "distance_m": 4200,
+        "min_travel_s": 252,
+        "max_travel_s": 2268
+      },
+      {
+        "from": "CAM_001",
+        "to": "CAM_006",
+        "road_name": "Aurangzeb Road / Lodhi Road",
+        "distance_m": 6500,
+        "min_travel_s": 390,
+        "max_travel_s": 3510
+      },
+      {
+        "from": "CAM_006",
+        "to": "CAM_001",
+        "road_name": "Aurangzeb Road / Lodhi Road",
+        "distance_m": 6500,
+        "min_travel_s": 390,
+        "max_travel_s": 3510
+      },
+      {
+        "from": "CAM_001",
+        "to": "CAM_008",
+        "road_name": "NH-48 (Delhi–Gurgaon Expressway)",
+        "distance_m": 16000,
+        "min_travel_s": 960,
+        "max_travel_s": 8640
+      },
+      {
+        "from": "CAM_008",
+        "to": "CAM_001",
+        "road_name": "NH-48 (Delhi–Gurgaon Expressway)",
+        "distance_m": 16000,
+        "min_travel_s": 960,
+        "max_travel_s": 8640
+      },
+      {
+        "from": "CAM_001",
+        "to": "CAM_009",
+        "road_name": "Outer Ring Road (North)",
+        "distance_m": 14000,
+        "min_travel_s": 840,
+        "max_travel_s": 7560
+      },
+      {
+        "from": "CAM_009",
+        "to": "CAM_001",
+        "road_name": "Outer Ring Road (North)",
+        "distance_m": 14000,
+        "min_travel_s": 840,
+        "max_travel_s": 7560
+      },
+      {
+        "from": "CAM_002",
+        "to": "CAM_003",
+        "road_name": "Ring Road / Pragati Maidan",
+        "distance_m": 1900,
+        "min_travel_s": 114,
+        "max_travel_s": 1026
+      },
+      {
+        "from": "CAM_003",
+        "to": "CAM_002",
+        "road_name": "Ring Road / Pragati Maidan",
+        "distance_m": 1900,
+        "min_travel_s": 114,
+        "max_travel_s": 1026
+      },
+      {
+        "from": "CAM_002",
+        "to": "CAM_006",
+        "road_name": "Lodhi Road",
+        "distance_m": 5800,
+        "min_travel_s": 348,
+        "max_travel_s": 3132
+      },
+      {
+        "from": "CAM_006",
+        "to": "CAM_002",
+        "road_name": "Lodhi Road",
+        "distance_m": 5800,
+        "min_travel_s": 348,
+        "max_travel_s": 3132
+      },
+      {
+        "from": "CAM_003",
+        "to": "CAM_004",
+        "road_name": "Ring Road (Yamuna Bank)",
+        "distance_m": 4500,
+        "min_travel_s": 270,
+        "max_travel_s": 2430
+      },
+      {
+        "from": "CAM_004",
+        "to": "CAM_003",
+        "road_name": "Ring Road (Yamuna Bank)",
+        "distance_m": 4500,
+        "min_travel_s": 270,
+        "max_travel_s": 2430
+      },
+      {
+        "from": "CAM_003",
+        "to": "CAM_005",
+        "road_name": "NH-9 / Vikas Marg",
+        "distance_m": 9500,
+        "min_travel_s": 570,
+        "max_travel_s": 5130
+      },
+      {
+        "from": "CAM_005",
+        "to": "CAM_003",
+        "road_name": "NH-9 / Vikas Marg",
+        "distance_m": 9500,
+        "min_travel_s": 570,
+        "max_travel_s": 5130
+      },
+      {
+        "from": "CAM_003",
+        "to": "CAM_006",
+        "road_name": "Ring Road (South)",
+        "distance_m": 5200,
+        "min_travel_s": 312,
+        "max_travel_s": 2808
+      },
+      {
+        "from": "CAM_006",
+        "to": "CAM_003",
+        "road_name": "Ring Road (South)",
+        "distance_m": 5200,
+        "min_travel_s": 312,
+        "max_travel_s": 2808
+      },
+      {
+        "from": "CAM_004",
+        "to": "CAM_009",
+        "road_name": "Outer Ring Road (North-West)",
+        "distance_m": 11000,
+        "min_travel_s": 660,
+        "max_travel_s": 5940
+      },
+      {
+        "from": "CAM_009",
+        "to": "CAM_004",
+        "road_name": "Outer Ring Road (North-West)",
+        "distance_m": 11000,
+        "min_travel_s": 660,
+        "max_travel_s": 5940
+      },
+      {
+        "from": "CAM_005",
+        "to": "CAM_010",
+        "road_name": "NH-9 (Delhi–Noida border)",
+        "distance_m": 5200,
+        "min_travel_s": 312,
+        "max_travel_s": 2808
+      },
+      {
+        "from": "CAM_010",
+        "to": "CAM_005",
+        "road_name": "NH-9 (Delhi–Noida border)",
+        "distance_m": 5200,
+        "min_travel_s": 312,
+        "max_travel_s": 2808
+      },
+      {
+        "from": "CAM_006",
+        "to": "CAM_007",
+        "road_name": "Ring Road / Outer Ring Road (South-East)",
+        "distance_m": 3100,
+        "min_travel_s": 186,
+        "max_travel_s": 1674
+      },
+      {
+        "from": "CAM_007",
+        "to": "CAM_006",
+        "road_name": "Ring Road / Outer Ring Road (South-East)",
+        "distance_m": 3100,
+        "min_travel_s": 186,
+        "max_travel_s": 1674
+      },
+      {
+        "from": "CAM_007",
+        "to": "CAM_010",
+        "road_name": "DND Flyway / Kalindi Kunj",
+        "distance_m": 8000,
+        "min_travel_s": 480,
+        "max_travel_s": 4320
+      },
+      {
+        "from": "CAM_010",
+        "to": "CAM_007",
+        "road_name": "DND Flyway / Kalindi Kunj",
+        "distance_m": 8000,
+        "min_travel_s": 480,
+        "max_travel_s": 4320
+      }
+    ]
+  },
+  "demo_scenarios": {
+    "_comment": "Ground-truth scripted routes for planted vehicles used in demo and E2E tests.",
+    "routes": [
+      {
+        "scenario_id": "NORMAL_ROUTE",
+        "plate": "DL01AB1234",
+        "vehicle_type": "car",
+        "description": "Normal commute through central Delhi corridor.",
+        "waypoints": [
+          { "camera_id": "CAM_001", "offset_s": 0 },
+          { "camera_id": "CAM_003", "offset_s": 480 },
+          { "camera_id": "CAM_007", "offset_s": 1200 },
+          { "camera_id": "CAM_010", "offset_s": 1800 }
+        ],
+        "expected_alerts": []
+      },
+      {
+        "scenario_id": "BLACKLIST_HIT",
+        "plate": "MH12CD5678",
+        "vehicle_type": "car",
+        "description": "Blacklisted vehicle — alert should fire at first sighting.",
+        "waypoints": [
+          { "camera_id": "CAM_002", "offset_s": 0 },
+          { "camera_id": "CAM_006", "offset_s": 600 }
+        ],
+        "expected_alerts": ["BLACKLIST_HIT"]
+      },
+      {
+        "scenario_id": "IMPOSSIBLE_TRAVEL",
+        "plate": "KA03EF9012",
+        "vehicle_type": "bike",
+        "description": "Plate appears at CAM_001 and CAM_010 within 45 s — physically impossible (12+ km).",
+        "waypoints": [
+          { "camera_id": "CAM_001", "offset_s": 0 },
+          { "camera_id": "CAM_010", "offset_s": 45 }
+        ],
+        "expected_alerts": ["IMPOSSIBLE_TRAVEL"]
+      },
+      {
+        "scenario_id": "NIGHT_MOVEMENT",
+        "plate": "UP14GH3456",
+        "vehicle_type": "truck",
+        "description": "Truck enters restricted zone (CAM_006) after 23:00.",
+        "waypoints": [
+          { "camera_id": "CAM_006", "offset_s": 0 }
+        ],
+        "inject_at_hour_utc": 17,
+        "expected_alerts": ["NIGHT_MOVEMENT_RESTRICTED_ZONE"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,9 @@
+# Place model weight files here.
+# .gitkeep ensures this directory is tracked even when empty.
+#
+# Required files (downloaded automatically by setup script or manually):
+#   yolov8n.pt          — YOLOv8 nano vehicle detector (from ultralytics)
+#   plate_detector.pt   — Custom YOLO plate detector (fine-tuned in Phase 2)
+#
+# Download yolov8n.pt:
+#   python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
