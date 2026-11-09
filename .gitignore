@@ -56,3 +56,12 @@ backend/public/snapshots/
 
 # ── Reports (runtime exports) ─────────────────────────────────────────────────
 backend/exports/
+
+# Big files (videos, datasets, model weights)
+data/video_samples/*.mp4
+data/video_samples/*.mov
+data/video_samples/*.avi
+data/datasets/
+ai-engine/models/*.pt
+.venv/
+__pycache__/
