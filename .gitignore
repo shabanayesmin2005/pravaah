@@ -65,3 +65,5 @@ data/datasets/
 ai-engine/models/*.pt
 .venv/
 __pycache__/
+yolov8n.pt
+*.pt

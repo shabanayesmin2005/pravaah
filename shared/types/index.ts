@@ -20,7 +20,6 @@ export {
   globalTrackId,
   isUUID,
 } from './detection.js';
-
 // ── Camera network types ───────────────────────────────────────────────────────
 export type {
   Camera,

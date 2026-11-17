@@ -1,45 +1,43 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # ai-engine/requirements.txt
-# Python 3.11 — AI camera worker dependencies
-# Install: pip install -r requirements.txt
+# Target: Python 3.11, macOS (Apple Silicon or Intel), CPU-only
+# Install: conda activate pravaah && pip install -r ai-engine/requirements.txt
+#
+# NOTE: torch is NOT pinned — both ultralytics and easyocr pull it in as a
+# dependency. pip resolves a compatible version automatically.
+# On macOS, ultralytics will offer MPS (Apple GPU); we disable it at runtime
+# by passing device="cpu" to all YOLO calls.
+#
+# First-run internet access is required to download the yasirfaizahmed plate
+# detector weights from HuggingFace Hub (~6 MB, cached after first download).
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── Core AI / CV ──────────────────────────────────────────────────────────────
-ultralytics==8.2.74            # YOLOv8 vehicle & plate detection
+ultralytics==8.2.74
 opencv-python-headless==4.10.0.84
 numpy==1.26.4
+Pillow==10.4.0
 
 # ── Multi-object tracking ─────────────────────────────────────────────────────
-# ByteTrack is integrated into ultralytics; no separate install needed.
-# If standalone ByteTrack is required:
-# bytetracker==0.1.0
+lapx==0.13.1
 
-# ── OCR ───────────────────────────────────────────────────────────────────────
-paddlepaddle==2.6.1            # CPU-only; for GPU: paddlepaddle-gpu==2.6.1
-paddleocr==2.8.1
-
-# EasyOCR fallback
+# ── OCR (EasyOCR, CPU-only) ───────────────────────────────────────────────────
 easyocr==1.7.1
 
 # ── Kafka ─────────────────────────────────────────────────────────────────────
+# confluent-kafka ships pre-built librdkafka binaries on macOS wheels.
+# No Homebrew dependency needed.
 confluent-kafka==2.5.0
 
-# ── Data validation ───────────────────────────────────────────────────────────
+# ── Data / Schema validation ──────────────────────────────────────────────────
 pydantic==2.8.2
+jsonschema==4.23.0
 
 # ── Utilities ─────────────────────────────────────────────────────────────────
 python-dotenv==1.0.1
-Pillow==10.4.0
-requests==2.32.3
-tqdm==4.66.4
 loguru==0.7.2
-scipy==1.14.0
+huggingface_hub==2.4.0
 
 # ── Testing ───────────────────────────────────────────────────────────────────
 pytest==8.3.2
 pytest-cov==5.0.0
-
-# ── Training / Evaluation (optional — only needed for scripts/) ───────────────
-# torch==2.3.1               # uncomment for GPU training
-# torchvision==0.18.1
-# scikit-learn==1.5.1

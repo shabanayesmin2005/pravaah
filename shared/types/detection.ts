@@ -97,6 +97,33 @@ export interface DetectionEvent {
    * Only present when the Re-ID module is active (Phase 6+).
    */
   appearance_embedding?: number[];
+
+  // ── Synthetic event markers (set by synthetic generator only) ─────────────
+
+  /**
+   * True for all events produced by the synthetic generator.
+   * Stream processors must exclude synthetic events from real analytics.
+   * Absent on real AI-engine events.
+   */
+  is_synthetic?: boolean;
+
+  /**
+   * Scenario tag for planted vehicles.
+   * e.g. "NORMAL_ROUTE" | "BLACKLIST_HIT" | "IMPOSSIBLE_TRAVEL" | "background"
+   * Only present when is_synthetic is true.
+   */
+  synthetic_scenario_id?: string;
+
+  // ── Plate detector provenance ──────────────────────────────────────────────
+
+  /**
+   * Plate detection method used.
+   * - "model": yasirfaizahmed/license-plate-object-detection neural detector (default)
+   * - "heuristic": bottom-crop fallback (requires --allow-heuristic-fallback flag)
+   * Absent when source_type is "video" (OCR skipped for unreadable CityFlow feeds).
+   * plate_confidence is hard-capped at 0.49 when method is "heuristic".
+   */
+  plate_detector_method?: 'model' | 'heuristic';
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

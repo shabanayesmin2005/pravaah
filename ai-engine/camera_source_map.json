@@ -1,0 +1,57 @@
+{
+  "CAM_001": {
+    "type": "video",
+    "path": "data/datasets/cityflow/train/S01/c001/vdo.avi",
+    "_note": "CityFlow S01 cam1 — vehicles detected, plates NOT read (unreadable in footage)"
+  },
+  "CAM_002": {
+    "type": "video",
+    "path": "data/datasets/cityflow/train/S01/c002/vdo.avi",
+    "_note": "CityFlow S01 cam2"
+  },
+  "CAM_003": {
+    "type": "video",
+    "path": "data/datasets/cityflow/train/S01/c003/vdo.avi",
+    "_note": "CityFlow S01 cam3"
+  },
+  "CAM_004": {
+    "type": "video",
+    "path": "data/datasets/cityflow/train/S01/c004/vdo.avi",
+    "_note": "CityFlow S01 cam4"
+  },
+  "CAM_005": {
+    "type": "video",
+    "path": "data/datasets/cityflow/train/S01/c005/vdo.avi",
+    "_note": "CityFlow S01 cam5"
+  },
+  "CAM_006": {
+    "type": "image",
+    "path": "data/datasets/indian_plates/number_plate_images_ocr/number_plate_images_ocr",
+    "annotations_path": "data/datasets/indian_plates/number_plate_annos_ocr/number_plate_annos_ocr",
+    "fps": 2,
+    "_note": "Indian plates OCR set (20 images, WITH ground-truth plate text in XML). Used for OCR demo."
+  },
+  "CAM_007": {
+    "type": "image",
+    "path": "data/datasets/indian_plates/Indian_Number_Plates/Sample_Images",
+    "fps": 2,
+    "_note": "Indian plates detection set (27 images, bbox only, no GT text)"
+  },
+  "CAM_008": {
+    "type": "video",
+    "path": "data/datasets/cityflow/train/S01/c001/vdo.avi",
+    "_note": "Reuses S01/c001 (second loop instance for different camera position simulation)"
+  },
+  "CAM_009": {
+    "type": "video",
+    "path": "data/datasets/cityflow/train/S01/c002/vdo.avi",
+    "_note": "Reuses S01/c002"
+  },
+  "CAM_010": {
+    "type": "image",
+    "path": "data/datasets/indian_plates/number_plate_images_ocr/number_plate_images_ocr",
+    "annotations_path": "data/datasets/indian_plates/number_plate_annos_ocr/number_plate_annos_ocr",
+    "fps": 2,
+    "_note": "Same 20-image OCR set as CAM_006 (looped independently)"
+  }
+}

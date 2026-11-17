@@ -89,6 +89,20 @@
       "items": { "type": "number" },
       "minItems": 512,
       "maxItems": 512
+    },
+    "is_synthetic": {
+      "type": "boolean",
+      "description": "True for all events produced by the synthetic generator. Absent on real AI-engine events. Stream processors must exclude synthetic events from real analytics."
+    },
+    "synthetic_scenario_id": {
+      "type": "string",
+      "description": "Scenario tag for planted vehicles, e.g. NORMAL_ROUTE, BLACKLIST_HIT, IMPOSSIBLE_TRAVEL, background. Only present when is_synthetic is true.",
+      "examples": ["NORMAL_ROUTE", "BLACKLIST_HIT", "IMPOSSIBLE_TRAVEL", "NIGHT_MOVEMENT", "background"]
+    },
+    "plate_detector_method": {
+      "type": "string",
+      "enum": ["model", "heuristic"],
+      "description": "Plate detection method: 'model' = yasirfaizahmed/license-plate-object-detection, 'heuristic' = bottom-crop fallback (--allow-heuristic-fallback required). Absent when source is video (OCR skipped). plate_confidence is hard-capped at 0.49 when heuristic."
     }
   }
 }
