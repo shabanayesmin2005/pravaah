@@ -24,6 +24,7 @@ export const CommandCenter: React.FC = () => {
   const [congestion, setCongestion] = useState<CongestionItem[]>([]);
   const [summary, setSummary] = useState<TrafficSummary | null>(null);
   const [recentAlerts, setRecentAlerts] = useState<Alert[]>([]);
+  const [openAlertsCount, setOpenAlertsCount] = useState<number>(0);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -31,17 +32,21 @@ export const CommandCenter: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const [cams, cong, summ, alts] = await Promise.allSettled([
+      const [cams, cong, summ, alts, openAlts] = await Promise.allSettled([
         getCameras(),
         getCongestion(),
         getTrafficSummary(),
         getAlerts({ limit: 5 }),
+        getAlerts({ status: 'OPEN', limit: 1 }),
       ]);
 
       if (cams.status === 'fulfilled') setCameras(cams.value);
       if (cong.status === 'fulfilled') setCongestion(cong.value);
       if (summ.status === 'fulfilled') setSummary(summ.value);
       if (alts.status === 'fulfilled') setRecentAlerts(alts.value.alerts);
+      if (openAlts.status === 'fulfilled') {
+        setOpenAlertsCount(openAlts.value.pagination?.total ?? openAlts.value.alerts.length);
+      }
 
       setLastRefreshed(new Date());
     } catch (err) {
@@ -102,9 +107,9 @@ export const CommandCenter: React.FC = () => {
           accentColor="cyan"
         />
         <StatCard
-          title="Active Alerts"
-          value={recentAlerts.filter((a) => a.status === 'OPEN').length}
-          subtitle="Critical & High incidents"
+          title="Open Alerts"
+          value={openAlertsCount}
+          subtitle="All unresolved incidents"
           icon={AlertTriangle}
           accentColor="red"
         />
@@ -118,7 +123,7 @@ export const CommandCenter: React.FC = () => {
         <StatCard
           title="Camera Feeds"
           value={`${cameras.filter((c) => c.active).length} / ${cameras.length || 10}`}
-          subtitle="Online & streaming"
+          subtitle="Registered cameras (simulated)"
           icon={Video}
           accentColor="emerald"
         />

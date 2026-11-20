@@ -10,6 +10,7 @@ import {
   Clock,
   MapPin,
   X,
+  CameraOff,
 } from 'lucide-react';
 import { getAlerts, patchAlert } from '../services/alert.service';
 import { Alert, AlertStatus, AlertType, AlertSeverity } from '../types';
@@ -26,6 +27,7 @@ export const Alerts: React.FC = () => {
 
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
+  const [modalImageError, setModalImageError] = useState(false);
   const [filterType, setFilterType] = useState<string>('ALL');
   const [filterSeverity, setFilterSeverity] = useState<string>('ALL');
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
@@ -54,6 +56,11 @@ export const Alerts: React.FC = () => {
   useEffect(() => {
     fetchAlertList();
   }, [filterType, filterSeverity, filterStatus, from, to]);
+
+  const openAlertDetails = (alert: Alert) => {
+    setModalImageError(false);
+    setSelectedAlert(alert);
+  };
 
   const handleUpdateStatus = async (alertId: string, status: AlertStatus) => {
     setIsUpdating(true);
@@ -162,7 +169,7 @@ export const Alerts: React.FC = () => {
                   <tr
                     key={alert.alert_id}
                     className="hover:bg-gray-800/40 transition-colors cursor-pointer"
-                    onClick={() => setSelectedAlert(alert)}
+                    onClick={() => openAlertDetails(alert)}
                   >
                     <td className="py-3 px-4">
                       <Badge
@@ -206,7 +213,7 @@ export const Alerts: React.FC = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setSelectedAlert(alert);
+                          openAlertDetails(alert);
                         }}
                         className="p-1 rounded bg-gray-800 hover:bg-gray-700 text-cyan-400"
                         title="View details"
@@ -281,18 +288,26 @@ export const Alerts: React.FC = () => {
               </div>
 
               {/* Evidence Snapshot (Role Protected: Only Police/Admin when present) */}
-              {isLawEnforcement && selectedAlert.snapshot_url && (
+              {isLawEnforcement && (
                 <div className="mt-3">
                   <span className="text-[11px] font-semibold text-gray-400 block mb-1.5">
                     Camera Evidence Snapshot:
                   </span>
-                  <div className="rounded-xl overflow-hidden border border-gray-800 max-h-48">
-                    <img
-                      src={selectedAlert.snapshot_url}
-                      alt="Plate evidence snapshot"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                  {selectedAlert.snapshot_url && !modalImageError ? (
+                    <div className="rounded-xl overflow-hidden border border-gray-800 max-h-48">
+                      <img
+                        src={selectedAlert.snapshot_url}
+                        alt="Plate evidence snapshot"
+                        onError={() => setModalImageError(true)}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="rounded-xl bg-gray-900 border border-gray-800 h-28 flex flex-col items-center justify-center text-gray-500 text-xs gap-1.5 p-3 text-center">
+                      <CameraOff className="w-5 h-5 text-gray-600" />
+                      <span>No snapshot (simulated data)</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

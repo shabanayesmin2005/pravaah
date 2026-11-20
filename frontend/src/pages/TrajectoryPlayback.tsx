@@ -10,6 +10,8 @@ import {
   Navigation,
   Clock,
   Car,
+  CameraOff,
+  Route,
 } from 'lucide-react';
 import { getVehicleTrajectory } from '../services/vehicle.service';
 import { getCameras } from '../services/camera.service';
@@ -31,7 +33,9 @@ export const TrajectoryPlayback: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playSpeed, setPlaySpeed] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNotFound, setIsNotFound] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -48,8 +52,10 @@ export const TrajectoryPlayback: React.FC = () => {
     async function loadData() {
       setIsLoading(true);
       setErrorMsg(null);
+      setIsNotFound(false);
       setIsPlaying(false);
       setActiveStep(0);
+      setImageError(false);
 
       try {
         const [trajData, cams] = await Promise.all([
@@ -65,7 +71,13 @@ export const TrajectoryPlayback: React.FC = () => {
         setCameraMap(map);
         setTrajectory(trajData);
       } catch (err: any) {
-        setErrorMsg(err.response?.data?.error || `Failed to load trajectory for ${activePlate}`);
+        if (err.response?.status === 404) {
+          setIsNotFound(true);
+          setErrorMsg(null);
+        } else {
+          setIsNotFound(false);
+          setErrorMsg(err.response?.data?.error || `Failed to load trajectory for ${activePlate}`);
+        }
         setTrajectory(null);
       } finally {
         setIsLoading(false);
@@ -74,6 +86,11 @@ export const TrajectoryPlayback: React.FC = () => {
 
     loadData();
   }, [activePlate]);
+
+  // Reset image error on step change
+  useEffect(() => {
+    setImageError(false);
+  }, [activeStep]);
 
   // Playback timer loop
   useEffect(() => {
@@ -146,9 +163,23 @@ export const TrajectoryPlayback: React.FC = () => {
         <div className="bg-[#111827] border border-gray-800 rounded-2xl p-6 h-[500px]">
           <LoadingSkeleton rows={8} />
         </div>
-      ) : !trajectory ? (
-        <div className="bg-[#111827] border border-gray-800 rounded-2xl p-12 text-center text-gray-400">
-          No trajectory recorded for vehicle {activePlate}.
+      ) : isNotFound || !trajectory ? (
+        <div className="bg-[#111827] border border-gray-800 rounded-2xl p-12 text-center max-w-lg mx-auto shadow-xl">
+          <div className="w-14 h-14 bg-gray-900 border border-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-4 text-cyan-400">
+            <Route className="w-7 h-7" />
+          </div>
+          <h3 className="text-base font-bold text-white mb-1.5">
+            No Stored Trajectory for This Plate
+          </h3>
+          <p className="text-xs text-gray-400 mb-6 leading-relaxed">
+            Vehicle <span className="font-mono font-bold text-cyan-400">{activePlate}</span> has not established a multi-camera trajectory in the current dataset, or plate readings were unreadable.
+          </p>
+          <button
+            onClick={() => navigate('/plates')}
+            className="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition-colors shadow-lg"
+          >
+            Browse Available Plates
+          </button>
         </div>
       ) : (
         <>
@@ -257,13 +288,19 @@ export const TrajectoryPlayback: React.FC = () => {
                       <span>{new Date(currentWaypoint.timestamp).toLocaleString()}</span>
                     </div>
 
-                    {currentWaypoint.snapshot_url && (
+                    {currentWaypoint.snapshot_url && !imageError ? (
                       <div className="mt-2 rounded-lg overflow-hidden border border-gray-800">
                         <img
                           src={currentWaypoint.snapshot_url}
                           alt="Vehicle Capture"
+                          onError={() => setImageError(true)}
                           className="w-full h-28 object-cover"
                         />
+                      </div>
+                    ) : (
+                      <div className="mt-2 rounded-lg bg-gray-900 border border-gray-800 h-24 flex flex-col items-center justify-center text-gray-500 text-xs gap-1 p-2 text-center">
+                        <CameraOff className="w-5 h-5 text-gray-600" />
+                        <span>No snapshot (simulated data)</span>
                       </div>
                     )}
                   </div>

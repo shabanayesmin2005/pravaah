@@ -1,5 +1,5 @@
-import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
+import React, { useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Trajectory, TrajectoryWaypoint } from '../../types';
 
@@ -12,6 +12,33 @@ interface TrajectoryMapProps {
 
 const TILE_URL =
   import.meta.env.VITE_MAP_TILE_URL || 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+function FitMapBounds({
+  waypoints,
+  cameraCoords,
+}: {
+  waypoints: TrajectoryWaypoint[];
+  cameraCoords: Map<string, { lat: number; lng: number; name: string }>;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    const validPositions: L.LatLngExpression[] = [];
+    waypoints.forEach((wp) => {
+      const loc = cameraCoords.get(wp.camera_id);
+      if (loc) {
+        validPositions.push([loc.lat, loc.lng]);
+      }
+    });
+
+    if (validPositions.length > 0) {
+      const bounds = L.latLngBounds(validPositions);
+      map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
+    }
+  }, [map, waypoints, cameraCoords]);
+
+  return null;
+}
 
 function createWaypointIcon(index: number, isActive: boolean, isImpossible: boolean) {
   const bgClass = isImpossible
@@ -50,6 +77,7 @@ export const TrajectoryMap: React.FC<TrajectoryMapProps> = ({
   return (
     <div className="h-full w-full rounded-2xl overflow-hidden border border-gray-800 shadow-xl relative">
       <MapContainer center={center} zoom={12} scrollWheelZoom={true} className="h-full w-full">
+        <FitMapBounds waypoints={waypoints} cameraCoords={cameraCoords} />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url={TILE_URL}

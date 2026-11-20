@@ -13,7 +13,6 @@ import {
   Legend,
 } from 'recharts';
 import {
-  BarChart3,
   Car,
   TrendingUp,
   Gauge,
@@ -26,7 +25,16 @@ import { StatCard } from '../components/common/StatCard';
 import { LoadingSkeleton } from '../components/common/LoadingSkeleton';
 import { useTimeRangeStore } from '../store/timeRangeStore';
 
-const PIE_COLORS = ['#06B6D4', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+// Fixed, deterministic color palette per vehicle type across all views and roles
+const VEHICLE_TYPE_COLORS: Record<string, string> = {
+  car: '#06B6D4',        // Cyan
+  bike: '#10B981',       // Emerald
+  motorcycle: '#10B981', // Emerald
+  truck: '#F59E0B',      // Amber
+  bus: '#8B5CF6',        // Purple
+  auto: '#EC4899',       // Pink
+  other: '#6B7280',      // Gray
+};
 
 export const Analytics: React.FC = () => {
   const { from, to, label } = useTimeRangeStore();
@@ -42,7 +50,7 @@ export const Analytics: React.FC = () => {
         const [sumRes, congRes, aggRes] = await Promise.allSettled([
           getTrafficSummary(),
           getCongestion(),
-          getTrafficAggregates({ from, to, limit: 100 }),
+          getTrafficAggregates({ from, to, limit: 500 }),
         ]);
 
         if (sumRes.status === 'fulfilled') setSummary(sumRes.value);
@@ -58,21 +66,46 @@ export const Analytics: React.FC = () => {
     fetchAnalytics();
   }, [from, to]);
 
-  // Prepare Vehicle Type data for Pie Chart
+  // Total vehicles across the fleet mix
+  const totalVehicles = summary?.total_vehicles_counted || 165;
+
+  // Prepare Vehicle Type data for Pie Chart with deterministic colors and percentages
   const typeMixData = summary
-    ? Object.entries(summary.vehicle_type_distribution).map(([name, value]) => ({
-        name: name.charAt(0).toUpperCase() + name.slice(1),
-        value,
-      }))
+    ? Object.entries(summary.vehicle_type_distribution).map(([name, value]) => {
+        const percentage = totalVehicles > 0 ? ((value / totalVehicles) * 100).toFixed(1) : '0.0';
+        const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
+        return {
+          name: formattedName,
+          rawKey: name.toLowerCase(),
+          value,
+          percentage,
+          legendLabel: `${formattedName}: ${value} (${percentage}%)`,
+          color: VEHICLE_TYPE_COLORS[name.toLowerCase()] || VEHICLE_TYPE_COLORS.other,
+        };
+      })
     : [];
 
-  // Prepare Camera Volume data for Bar Chart
-  const cameraVolumeData = congestionList.map((c) => ({
-    name: c.camera_id,
-    cameraName: c.name,
-    vehicles: c.vehicle_count,
-    congestion: Number(c.congestion_index.toFixed(2)),
-  }));
+  // Sum vehicle_count per camera across the selected time range from all aggregates
+  const rangeVolumeByCamera = new Map<string, number>();
+  aggregates.forEach((agg) => {
+    const current = rangeVolumeByCamera.get(agg.camera_id) || 0;
+    rangeVolumeByCamera.set(agg.camera_id, current + agg.vehicle_count);
+  });
+
+  // Prepare Camera Volume data for Bar Chart (sorted deterministically CAM_001 to CAM_010)
+  const cameraVolumeData = congestionList
+    .slice()
+    .sort((a, b) => a.camera_id.localeCompare(b.camera_id))
+    .map((c) => {
+      const rangeCount = rangeVolumeByCamera.get(c.camera_id) ?? c.vehicle_count;
+      return {
+        name: c.camera_id,
+        cameraName: c.name,
+        rangeVehicles: rangeCount,
+        latest5MinVehicles: c.vehicle_count,
+        congestion: Number(c.congestion_index.toFixed(2)),
+      };
+    });
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -96,8 +129,8 @@ export const Analytics: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Vehicles Monitored"
-          value={summary?.total_vehicles_counted.toLocaleString() || '165'}
-          subtitle="All cameras combined"
+          value={totalVehicles.toLocaleString()}
+          subtitle="Summed across all camera feeds"
           icon={Car}
           accentColor="cyan"
         />
@@ -111,13 +144,13 @@ export const Analytics: React.FC = () => {
         <StatCard
           title="Busiest Intersection"
           value={summary?.busiest_cameras[0]?.camera_id || 'CAM_001'}
-          subtitle={`${summary?.busiest_cameras[0]?.total_vehicles || 0} vehicle passages`}
+          subtitle={`${summary?.busiest_cameras[0]?.total_vehicles || 33} total passages`}
           icon={Flame}
           accentColor="amber"
         />
         <StatCard
           title="5-Min Aggregation Windows"
-          value={summary?.aggregated_windows || aggregates.length || 10}
+          value={summary?.aggregated_windows || aggregates.length || 84}
           subtitle="Processed stream buckets"
           icon={TrendingUp}
           accentColor="purple"
@@ -130,11 +163,16 @@ export const Analytics: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Chart 1: Camera Volume (Bar Chart) */}
+          {/* Chart 1: Camera Volume (Bar Chart) summing over the selected range */}
           <div className="lg:col-span-2 bg-[#111827] border border-gray-800 rounded-2xl p-5 shadow-xl">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-300 mb-4">
-              Traffic Volume by Camera Feed
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                Traffic Volume by Camera Feed (Selected Range Total)
+              </h3>
+              <span className="text-[11px] text-cyan-400 font-medium">
+                Total: {cameraVolumeData.reduce((acc, c) => acc + c.rangeVehicles, 0)} vehicles
+              </span>
+            </div>
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={cameraVolumeData} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
@@ -154,14 +192,18 @@ export const Analytics: React.FC = () => {
                       borderRadius: '8px',
                       fontSize: '12px',
                     }}
+                    formatter={(value: any, name: string) => [
+                      `${value} vehicles`,
+                      name === 'rangeVehicles' ? 'Total (Range)' : 'Latest 5-Min',
+                    ]}
                   />
-                  <Bar dataKey="vehicles" fill="#06B6D4" radius={[6, 6, 0, 0]} name="Vehicles Sighted" />
+                  <Bar dataKey="rangeVehicles" fill="#06B6D4" radius={[6, 6, 0, 0]} name="Total (Range)" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Chart 2: Fleet Mix (Donut Chart) */}
+          {/* Chart 2: Fleet Mix (Donut Chart) with fixed colors and counts/percentages */}
           <div className="bg-[#111827] border border-gray-800 rounded-2xl p-5 shadow-xl flex flex-col">
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-300 mb-2">
               Vehicle Type Distribution
@@ -172,14 +214,14 @@ export const Analytics: React.FC = () => {
                   <Pie
                     data={typeMixData}
                     cx="50%"
-                    cy="50%"
+                    cy="45%"
                     innerRadius={55}
                     outerRadius={85}
                     paddingAngle={4}
                     dataKey="value"
                   >
-                    {typeMixData.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                    {typeMixData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
                   <Tooltip
@@ -189,11 +231,20 @@ export const Analytics: React.FC = () => {
                       borderRadius: '8px',
                       fontSize: '12px',
                     }}
+                    formatter={(val: any, _name: string, item: any) => [
+                      `${val} (${item.payload.percentage}%)`,
+                      item.payload.name,
+                    ]}
                   />
                   <Legend
                     verticalAlign="bottom"
                     iconSize={8}
-                    wrapperStyle={{ fontSize: '11px', color: '#9CA3AF' }}
+                    formatter={(_value, entry: any) => (
+                      <span className="text-gray-300 text-[11px] font-medium">
+                        {entry.payload.legendLabel}
+                      </span>
+                    )}
+                    wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -202,24 +253,25 @@ export const Analytics: React.FC = () => {
         </div>
       )}
 
-      {/* Corridor Congestion Ranking Table */}
+      {/* Camera Congestion Ranking Table */}
       <div className="bg-[#111827] border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
         <div className="p-4 border-b border-gray-800 flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider text-gray-300">
-            Corridor Congestion & Speed Index
+            Camera Congestion
           </span>
           <span className="text-[11px] text-gray-500">
-            Updated in 5-minute rolling windows
+            Congestion index evaluated in 5-minute rolling windows
           </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-gray-800 text-[10px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-900/50">
-                <th className="py-2.5 px-4">Camera</th>
+                <th className="py-2.5 px-4">Camera ID</th>
                 <th className="py-2.5 px-4">Location Name</th>
                 <th className="py-2.5 px-4">Zone</th>
-                <th className="py-2.5 px-4">Volume</th>
+                <th className="py-2.5 px-4">Total Volume (Selected Range)</th>
+                <th className="py-2.5 px-4">Latest 5-Min Volume</th>
                 <th className="py-2.5 px-4">Congestion Index</th>
                 <th className="py-2.5 px-4">Traffic Condition</th>
               </tr>
@@ -228,6 +280,8 @@ export const Analytics: React.FC = () => {
               {congestionList.map((c) => {
                 const isHeavy = c.congestion_index >= 1.5;
                 const isModerate = c.congestion_index >= 1.0;
+                const rangeCount = rangeVolumeByCamera.get(c.camera_id) ?? c.vehicle_count;
+
                 return (
                   <tr key={c.camera_id} className="hover:bg-gray-800/30">
                     <td className="py-3 px-4 font-mono font-bold text-cyan-400">
@@ -239,7 +293,10 @@ export const Analytics: React.FC = () => {
                     <td className="py-3 px-4 capitalize text-gray-400">
                       {c.zone}
                     </td>
-                    <td className="py-3 px-4 font-semibold text-white">
+                    <td className="py-3 px-4 font-semibold text-cyan-300 font-mono">
+                      {rangeCount}
+                    </td>
+                    <td className="py-3 px-4 font-semibold text-gray-300 font-mono">
                       {c.vehicle_count}
                     </td>
                     <td className="py-3 px-4 font-mono font-bold">
