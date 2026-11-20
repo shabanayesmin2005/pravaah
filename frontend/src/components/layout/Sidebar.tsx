@@ -6,6 +6,8 @@ import {
   Route,
   BellRing,
   BarChart3,
+  ShieldAlert,
+  ShieldCheck,
   Shield,
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
@@ -48,6 +50,18 @@ const navItems: NavItem[] = [
     to: '/trajectories',
     icon: Route,
     roles: ['Admin', 'Police'],
+  },
+  {
+    name: 'Hotlist / Blacklist',
+    to: '/blacklist',
+    icon: ShieldAlert,
+    roles: ['Admin', 'Police'],
+  },
+  {
+    name: 'Audit Trail',
+    to: '/audit-logs',
+    icon: ShieldCheck,
+    roles: ['Admin'],
   },
 ];
 

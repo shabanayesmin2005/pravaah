@@ -62,6 +62,29 @@ export interface Alert {
   created_at: string;
 }
 
+export interface BlacklistEntry {
+  _id?: string;
+  plate_text: string;
+  reason: string;
+  severity: AlertSeverity;
+  agency: string;
+  added_by: string;
+  added_at: string;
+  active?: boolean;
+}
+
+export interface AuditLogEntry {
+  _id: string;
+  user_id?: string;
+  email?: string;
+  role?: string;
+  action: string;
+  target?: string;
+  ip?: string;
+  details?: Record<string, any>;
+  timestamp: string;
+}
+
 export interface PlateSearchResult {
   _id: string;
   plate_text: string;
@@ -121,6 +144,11 @@ export interface CongestionItem {
   congestion_level: 'NORMAL' | 'MODERATE' | 'HIGH';
 }
 
+export interface DataTimeRange {
+  earliest: string | null;
+  latest: string | null;
+}
+
 export interface TrafficSummary {
   total_vehicles_counted: number;
   active_cameras: number;
@@ -131,6 +159,7 @@ export interface TrafficSummary {
     total_vehicles: number;
     avg_congestion: number;
   }>;
+  time_range?: DataTimeRange;
 }
 
 export interface TrafficAggregate {

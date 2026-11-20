@@ -23,6 +23,7 @@ import { getTrafficSummary, getCongestion, getTrafficAggregates } from '../servi
 import { TrafficSummary, CongestionItem, TrafficAggregate } from '../types';
 import { StatCard } from '../components/common/StatCard';
 import { LoadingSkeleton } from '../components/common/LoadingSkeleton';
+import { TimeRangeSelector } from '../components/common/TimeRangeSelector';
 import { useTimeRangeStore } from '../store/timeRangeStore';
 
 // Fixed, deterministic color palette per vehicle type across all views and roles
@@ -47,10 +48,14 @@ export const Analytics: React.FC = () => {
     async function fetchAnalytics() {
       setIsLoading(true);
       try {
+        const params: any = { limit: 500 };
+        if (from) params.from = from;
+        if (to) params.to = to;
+
         const [sumRes, congRes, aggRes] = await Promise.allSettled([
           getTrafficSummary(),
           getCongestion(),
-          getTrafficAggregates({ from, to, limit: 500 }),
+          getTrafficAggregates(params),
         ]);
 
         if (sumRes.status === 'fulfilled') setSummary(sumRes.value);
@@ -119,9 +124,12 @@ export const Analytics: React.FC = () => {
             Aggregated vehicle volume metrics, fleet distribution & congestion indices
           </p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-800 text-xs text-cyan-400 font-semibold">
-          <Calendar className="w-4 h-4 text-cyan-500" />
-          <span>Active Window: {label}</span>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-800 text-xs text-cyan-400 font-semibold">
+            <Calendar className="w-4 h-4 text-cyan-500 shrink-0" />
+            <span className="truncate max-w-[320px]" title={label}>Active Window: {label}</span>
+          </div>
+          <TimeRangeSelector />
         </div>
       </div>
 

@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Trajectory, TrajectoryWaypoint } from '../../types';
+import { formatDuration } from '../../utils/date';
 
 interface TrajectoryMapProps {
   trajectory: Trajectory;
@@ -113,7 +114,7 @@ export const TrajectoryMap: React.FC<TrajectoryMapProps> = ({
                   </div>
                   <div className="text-[11px] text-gray-300 space-y-0.5">
                     <p>Distance: {(seg.distance_m / 1000).toFixed(1)} km</p>
-                    <p>Duration: {Math.round(seg.delta_time_s / 60)} mins</p>
+                    <p>Duration: {formatDuration(seg.delta_time_s)}</p>
                     <p className={`font-semibold ${isImpossible ? 'text-red-400' : 'text-cyan-400'}`}>
                       Speed: {seg.implied_speed_kmh} km/h
                     </p>

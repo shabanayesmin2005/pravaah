@@ -1,11 +1,16 @@
-import React from 'react';
-import { LogOut, Calendar, AlertCircle } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { LogOut, Calendar } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
-import { useTimeRangeStore, TimeRangePreset } from '../../store/timeRangeStore';
+import { useTimeRangeStore } from '../../store/timeRangeStore';
+import { TimeRangeSelector } from '../common/TimeRangeSelector';
 
 export const Header: React.FC = () => {
   const { user, logout } = useAuthStore();
-  const { preset, setPreset, label } = useTimeRangeStore();
+  const { label, fetchDataRange } = useTimeRangeStore();
+
+  useEffect(() => {
+    fetchDataRange();
+  }, [fetchDataRange]);
 
   const roleColorMap = {
     Admin: 'bg-purple-950/80 text-purple-300 border-purple-700/60',
@@ -34,17 +39,7 @@ export const Header: React.FC = () => {
       {/* Right: Controls, Role Badge, Logout */}
       <div className="flex items-center gap-3">
         {/* Time Filter Selector */}
-        <div className="relative">
-          <select
-            value={preset}
-            onChange={(e) => setPreset(e.target.value as TimeRangePreset)}
-            className="bg-gray-900 border border-gray-700 text-xs text-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-500 cursor-pointer"
-          >
-            <option value="all">All Demo Data (Nov 2026)</option>
-            <option value="24h">Peak Window (24h)</option>
-            <option value="7d">Demo Week (7d)</option>
-          </select>
-        </div>
+        <TimeRangeSelector />
 
         {/* Role Badge */}
         {user && (

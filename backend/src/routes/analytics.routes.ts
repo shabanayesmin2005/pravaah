@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { TrafficAggregate } from '../models/traffic.model';
 import { Camera } from '../models/camera.model';
+import { Detection } from '../models/detection.model';
 import { authenticate } from '../middleware/auth';
 import { validateRequest } from '../middleware/validate';
 import { sendSuccess } from '../utils/response';
@@ -103,9 +104,39 @@ analyticsRouter.get('/congestion', async (_req: Request, res: Response) => {
   return sendSuccess(res, result);
 });
 
+// GET /analytics/time-range - earliest and latest timestamps across all data
+analyticsRouter.get('/time-range', async (_req: Request, res: Response) => {
+  const [earliestDetection, latestDetection] = await Promise.all([
+    Detection.findOne({ timestamp: { $exists: true, $ne: '' } }, { timestamp: 1 })
+      .sort({ timestamp: 1 })
+      .lean(),
+    Detection.findOne({ timestamp: { $exists: true, $ne: '' } }, { timestamp: 1 })
+      .sort({ timestamp: -1 })
+      .lean(),
+  ]);
+
+  let earliest = earliestDetection?.timestamp || null;
+  let latest = latestDetection?.timestamp || null;
+
+  // Fallback to traffic_aggregates if detections is empty
+  if (!earliest || !latest) {
+    const [earliestAgg, latestAgg] = await Promise.all([
+      TrafficAggregate.findOne({}, { window_start: 1 }).sort({ window_start: 1 }).lean(),
+      TrafficAggregate.findOne({}, { window_start: 1 }).sort({ window_start: -1 }).lean(),
+    ]);
+    if (!earliest) earliest = earliestAgg?.window_start || null;
+    if (!latest) latest = latestAgg?.window_start || null;
+  }
+
+  return sendSuccess(res, {
+    earliest,
+    latest,
+  });
+});
+
 // GET /analytics/summary - city-wide overview
 analyticsRouter.get('/summary', async (_req: Request, res: Response) => {
-  const [totalVehiclesAgg, typeMixAgg, cameraCount, alertCount] = await Promise.all([
+  const [totalVehiclesAgg, typeMixAgg, cameraCount, alertCount, earliestDetection, latestDetection] = await Promise.all([
     TrafficAggregate.aggregate([
       {
         $group: {
@@ -126,6 +157,12 @@ analyticsRouter.get('/summary', async (_req: Request, res: Response) => {
     ]),
     Camera.countDocuments({ active: true }),
     TrafficAggregate.countDocuments(),
+    Detection.findOne({ timestamp: { $exists: true, $ne: '' } }, { timestamp: 1 })
+      .sort({ timestamp: 1 })
+      .lean(),
+    Detection.findOne({ timestamp: { $exists: true, $ne: '' } }, { timestamp: 1 })
+      .sort({ timestamp: -1 })
+      .lean(),
   ]);
 
   const vehicleTypeMix: Record<string, number> = {};
@@ -155,5 +192,9 @@ analyticsRouter.get('/summary', async (_req: Request, res: Response) => {
       total_vehicles: b.total_vehicles,
       avg_congestion: Number(b.avg_congestion.toFixed(2)),
     })),
+    time_range: {
+      earliest: earliestDetection?.timestamp || null,
+      latest: latestDetection?.timestamp || null,
+    },
   });
 });

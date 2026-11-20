@@ -10,18 +10,18 @@
     "scripts"
   ],
   "scripts": {
-    "infra:up": "docker-compose -f infra/docker-compose.yml up -d",
-    "infra:down": "docker-compose -f infra/docker-compose.yml down",
-    "infra:reset": "docker-compose -f infra/docker-compose.yml down -v",
-    "infra:logs": "docker-compose -f infra/docker-compose.yml logs -f",
-    "infra:ps": "docker-compose -f infra/docker-compose.yml ps",
+    "infra:up": "docker compose --env-file .env -f infra/docker-compose.yml up -d",
+    "infra:down": "docker compose --env-file .env -f infra/docker-compose.yml down",
+    "infra:wipe-all-data": "docker compose --env-file .env -f infra/docker-compose.yml down -v",
+    "infra:logs": "docker compose --env-file .env -f infra/docker-compose.yml logs -f",
+    "infra:ps": "docker compose --env-file .env -f infra/docker-compose.yml ps",
     "build:shared": "npm run build --workspace=shared",
     "dev:backend": "npm run dev --workspace=backend",
     "dev:frontend": "npm run dev --workspace=frontend",
     "test:shared": "npm run test --workspace=shared",
     "test:backend": "npm run test --workspace=backend",
-    "seed": "npm run seed --workspace=scripts",
-    "replay": "npm run replay --workspace=scripts"
+    "seed": "npm run seed --workspace=backend",
+    "demo:reset": "bash scripts/reset_demo.sh"
   },
   "engines": {
     "node": ">=20.0.0",

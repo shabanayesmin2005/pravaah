@@ -18,6 +18,7 @@ import { getCameras } from '../services/camera.service';
 import { Trajectory, Camera } from '../types';
 import { TrajectoryMap } from '../components/map/TrajectoryMap';
 import { LoadingSkeleton } from '../components/common/LoadingSkeleton';
+import { formatDuration, pluralize } from '../utils/date';
 
 export const TrajectoryPlayback: React.FC = () => {
   const { plate: routePlate } = useParams<{ plate?: string }>();
@@ -202,7 +203,7 @@ export const TrajectoryPlayback: React.FC = () => {
             <div className="bg-[#111827] border border-gray-800 rounded-xl p-3.5">
               <span className="text-[10px] uppercase font-bold text-gray-400 block">Total Duration</span>
               <span className="text-base font-extrabold text-cyan-400">
-                {Math.round(trajectory.total_duration_s / 60)} mins
+                {formatDuration(trajectory.total_duration_s)}
               </span>
             </div>
 
@@ -361,7 +362,7 @@ export const TrajectoryPlayback: React.FC = () => {
           {/* Hop By Hop Segments Table */}
           <div className="bg-[#111827] border border-gray-800 rounded-2xl overflow-hidden shadow-xl">
             <div className="p-4 border-b border-gray-800 font-bold text-xs uppercase tracking-wider text-gray-300">
-              Corridor Progression Telemetry ({trajectory.segments.length} segments)
+              Corridor Progression Telemetry ({pluralize(trajectory.segments.length, 'segment', 'segments')})
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
@@ -386,7 +387,7 @@ export const TrajectoryPlayback: React.FC = () => {
                       <td className="py-2.5 px-4 font-mono text-cyan-300">{seg.from_camera}</td>
                       <td className="py-2.5 px-4 font-mono text-cyan-300">{seg.to_camera}</td>
                       <td className="py-2.5 px-4">{(seg.distance_m / 1000).toFixed(1)} km</td>
-                      <td className="py-2.5 px-4">{Math.round(seg.delta_time_s / 60)} mins</td>
+                      <td className="py-2.5 px-4">{formatDuration(seg.delta_time_s)}</td>
                       <td className="py-2.5 px-4 font-bold font-mono">
                         <span className={seg.impossible_travel ? 'text-red-400' : 'text-emerald-400'}>
                           {seg.implied_speed_kmh} km/h

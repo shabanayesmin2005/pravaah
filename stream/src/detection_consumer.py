@@ -6,6 +6,7 @@ and idempotently upserts them into MongoDB 'detections' collection.
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from typing import Any, Optional
 
@@ -138,20 +139,29 @@ class DetectionConsumer:
     def consume_batch(self, max_messages: int = 100, timeout: float = 2.0) -> list[dict[str, Any]]:
         """
         Consume a batch of messages. Useful for batch passes (--once).
+        Loops until no more messages arrive or max_messages is reached.
         """
         if self.consumer is None:
             self.init_kafka_consumer()
 
         stored_events: list[dict[str, Any]] = []
-        messages = self.consumer.consume(num_messages=max_messages, timeout=timeout)
-        for msg in messages:
-            if msg.error():
-                if msg.error().code() != KafkaError._PARTITION_EOF:
-                    logger.error(f"Kafka error: {msg.error()}")
-                continue
-            ev = self.process_message(msg.value())
-            if ev is not None:
-                stored_events.append(ev)
+        start_time = time.time()
+        while len(stored_events) < max_messages:
+            remaining = max_messages - len(stored_events)
+            messages = self.consumer.consume(num_messages=remaining, timeout=1.0)
+            if not messages:
+                # If we haven't received anything yet, allow up to timeout for partition assignment
+                if not stored_events and (time.time() - start_time < timeout):
+                    continue
+                break
+            for msg in messages:
+                if msg.error():
+                    if msg.error().code() != KafkaError._PARTITION_EOF:
+                        logger.error(f"Kafka error: {msg.error()}")
+                    continue
+                ev = self.process_message(msg.value())
+                if ev is not None:
+                    stored_events.append(ev)
 
         return stored_events
 

@@ -125,7 +125,7 @@ class TrafficAnalyticsAggregator:
             avg_conf = round(sum(confidences) / len(confidences), 4) if confidences else 0.0
 
             # Congestion index: ratio of count to baseline capacity
-            congestion_idx = min(1.0, round(total_count / float(self.baseline_capacity), 2))
+            congestion_idx = round(total_count / float(self.baseline_capacity), 2)
 
             agg_doc = {
                 "camera_id": cam_id,

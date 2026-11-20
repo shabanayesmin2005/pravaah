@@ -392,8 +392,20 @@
         "waypoints": [
           { "camera_id": "CAM_006", "offset_s": 0 }
         ],
-        "inject_at_hour_utc": 17,
         "expected_alerts": ["NIGHT_MOVEMENT_RESTRICTED_ZONE"]
+      },
+      {
+        "scenario_id": "SHUTTLE",
+        "plate": "DL05ZZ9999",
+        "vehicle_type": "car",
+        "description": "Suspicious shuttling between CAM_001 and CAM_002.",
+        "waypoints": [
+          { "camera_id": "CAM_001", "offset_s": 600 },
+          { "camera_id": "CAM_002", "offset_s": 840 },
+          { "camera_id": "CAM_001", "offset_s": 1080 },
+          { "camera_id": "CAM_002", "offset_s": 1320 }
+        ],
+        "expected_alerts": ["SUSPICIOUS_ROUTE"]
       }
     ]
   }

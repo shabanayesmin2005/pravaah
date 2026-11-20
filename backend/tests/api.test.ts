@@ -397,12 +397,22 @@ describe('PRAVAAH Backend API - Part A Test Suite', () => {
     });
   });
 
-  describe('6. System Health Check', () => {
+  describe('6. System Health & Analytics Time Range', () => {
     it('GET /health returns 200 with service status', async () => {
       const res = await request(app).get('/api/v1/health');
       expect([200, 503]).toContain(res.status);
       expect(res.body.data.services).toHaveProperty('mongodb');
       expect(res.body.data.services).toHaveProperty('redis');
+    });
+
+    it('GET /analytics/time-range returns earliest and latest timestamps', async () => {
+      const res = await request(app)
+        .get('/api/v1/analytics/time-range')
+        .set('Authorization', `Bearer ${adminToken}`);
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toHaveProperty('earliest');
+      expect(res.body.data).toHaveProperty('latest');
     });
   });
 });

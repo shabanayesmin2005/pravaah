@@ -17,6 +17,7 @@ import { Alert, AlertStatus, AlertType, AlertSeverity } from '../types';
 import { Badge } from '../components/common/Badge';
 import { LoadingSkeleton } from '../components/common/LoadingSkeleton';
 import { EmptyState } from '../components/common/EmptyState';
+import { TimeRangeSelector } from '../components/common/TimeRangeSelector';
 import { useAuthStore } from '../store/authStore';
 import { useTimeRangeStore } from '../store/timeRangeStore';
 
@@ -39,7 +40,9 @@ export const Alerts: React.FC = () => {
   const fetchAlertList = async () => {
     setIsLoading(true);
     try {
-      const params: any = { from, to, limit: 100 };
+      const params: any = { limit: 100 };
+      if (from) params.from = from;
+      if (to) params.to = to;
       if (filterType !== 'ALL') params.type = filterType;
       if (filterSeverity !== 'ALL') params.severity = filterSeverity;
       if (filterStatus !== 'ALL') params.status = filterStatus;
@@ -133,6 +136,9 @@ export const Alerts: React.FC = () => {
           <option value="ACKNOWLEDGED">Acknowledged</option>
           <option value="RESOLVED">Resolved</option>
         </select>
+
+        {/* Time Range Selector */}
+        <TimeRangeSelector />
 
         <span className="ml-auto text-xs text-gray-500">
           Showing <strong className="text-white">{alerts.length}</strong> alerts

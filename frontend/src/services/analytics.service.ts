@@ -1,8 +1,13 @@
 import { api } from './api';
-import { TrafficSummary, CongestionItem, TrafficAggregate, ApiResponse } from '../types';
+import { TrafficSummary, CongestionItem, TrafficAggregate, DataTimeRange, ApiResponse } from '../types';
 
 export async function getTrafficSummary(): Promise<TrafficSummary> {
   const res = await api.get<ApiResponse<TrafficSummary>>('/analytics/summary');
+  return res.data.data;
+}
+
+export async function getTrafficTimeRange(): Promise<DataTimeRange> {
+  const res = await api.get<ApiResponse<DataTimeRange>>('/analytics/time-range');
   return res.data.data;
 }
 

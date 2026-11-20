@@ -12,6 +12,8 @@ import { PlateSearch } from './pages/PlateSearch';
 import { TrajectoryPlayback } from './pages/TrajectoryPlayback';
 import { Alerts } from './pages/Alerts';
 import { Analytics } from './pages/Analytics';
+import { BlacklistPage } from './pages/BlacklistPage';
+import { AuditLogsPage } from './pages/AuditLogsPage';
 import { NotFound } from './pages/NotFound';
 
 export const App: React.FC = () => {
@@ -87,6 +89,26 @@ export const App: React.FC = () => {
             element={
               <ProtectedRoute allowedRoles={['Admin', 'Police']}>
                 <TrajectoryPlayback />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Hotlist / Blacklist Management - Admin, Police only */}
+          <Route
+            path="blacklist"
+            element={
+              <ProtectedRoute allowedRoles={['Admin', 'Police']}>
+                <BlacklistPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* System Audit Logs - Admin only */}
+          <Route
+            path="audit-logs"
+            element={
+              <ProtectedRoute allowedRoles={['Admin']}>
+                <AuditLogsPage />
               </ProtectedRoute>
             }
           />
