@@ -67,3 +67,4 @@ ai-engine/models/*.pt
 __pycache__/
 yolov8n.pt
 *.pt
+.demo-logs/
