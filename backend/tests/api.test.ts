@@ -173,13 +173,39 @@ describe('PRAVAAH Backend API - Part A Test Suite', () => {
       expect(audit?.target).toContain('/api/v1/plates/search');
     });
 
-    it('Analyst is blocked from vehicle trajectories (403 Forbidden)', async () => {
+    it('Analyst is blocked from vehicle trajectories (403 Forbidden) and records ACCESS_DENIED audit log', async () => {
       const res = await request(app)
         .get('/api/v1/vehicles/DL01AB1234/trajectory')
         .set('Authorization', `Bearer ${analystToken}`);
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
+
+      const audit = await AuditLog.findOne({
+        action: 'ACCESS_DENIED',
+        email: 'analyst@test.pravaah.local',
+        target: { $regex: '/api/v1/vehicles/DL01AB1234/trajectory' },
+      });
+      expect(audit).not.toBeNull();
+      expect(audit?.role).toBe('Analyst');
+    });
+
+    it('Analyst is blocked from PATCH /alerts/:id (403 Forbidden) and records ACCESS_DENIED audit log', async () => {
+      const res = await request(app)
+        .patch('/api/v1/alerts/test-alert-id')
+        .set('Authorization', `Bearer ${analystToken}`)
+        .send({ status: 'ACKNOWLEDGED' });
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+
+      const audit = await AuditLog.findOne({
+        action: 'ACCESS_DENIED',
+        email: 'analyst@test.pravaah.local',
+        target: { $regex: '/api/v1/alerts/test-alert-id' },
+      });
+      expect(audit).not.toBeNull();
+      expect(audit?.role).toBe('Analyst');
     });
   });
 

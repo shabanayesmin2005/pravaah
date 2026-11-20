@@ -45,8 +45,13 @@ class SyntheticEventGenerator:
         self.seed = seed
         self.speed = max(0.1, speed)
         self.rng = random.Random(seed)
-        # Anchor base_time to ~60 minutes before run so events are fresh on demo day
-        self.base_time = base_time or (datetime.now(timezone.utc) - timedelta(minutes=60))
+        # Anchor base_time to 60 minutes before run, aligned to 5-minute clock boundary
+        if base_time is None:
+            now = datetime.now(timezone.utc)
+            aligned_now = now.replace(minute=(now.minute // 5) * 5, second=0, microsecond=0)
+            self.base_time = aligned_now - timedelta(minutes=60)
+        else:
+            self.base_time = base_time
         self.publisher = publisher
         self.validator = validator or EventValidator()
         self.output_file = Path(output_file or config.DEMO_EVENTS_PATH)
@@ -130,26 +135,26 @@ class SyntheticEventGenerator:
 
     def _generate_rush_hour_traffic(self) -> list[DetectionEvent]:
         """
-        Generate rush-hour congestion surge at CAM_001 and CAM_003 within a single 5-minute window
-        (minutes 35 to 40 relative to base_time).
-        ~75 vehicles total:
-        - 48 vehicles traverse CAM_001 -> CAM_003
-        - 26 vehicles pass CAM_001 only
-        - 12 vehicles pass CAM_003 only
+        Generate rush-hour congestion surge at CAM_001 and CAM_003 within the LAST 5-minute window
+        of the dataset's time span (minutes 55 to 60 relative to base_time).
+        Total vehicles:
+        - 52 vehicles traverse CAM_001 -> CAM_003
+        - 28 vehicles pass CAM_001 only
+        - 8 vehicles pass CAM_003 only
         Produces:
-        CAM_001: 74 vehicles in 5 min -> Congestion index ~1.48 (Heavy)
-        CAM_003: 60 vehicles in 5 min -> Congestion index ~1.20 (Moderate)
+        CAM_001: 52 + 28 = 80 vehicles in 5 min -> Congestion index 1.60 (Heavy >= 1.5, Red marker)
+        CAM_003: 52 + 8  = 60 vehicles in 5 min -> Congestion index 1.20 (Moderate >= 1.0, Amber marker)
         """
         events: list[DetectionEvent] = []
         track_counter = 8000
-        # 5-minute window starting at minute 35 of the 60-minute span
-        window_start = self.base_time + timedelta(minutes=35)
+        # The LAST 5-minute window of the 60-minute span
+        window_start = self.base_time + timedelta(minutes=55)
 
-        # 1. 48 vehicles traversing CAM_001 -> CAM_003
-        for _ in range(48):
+        # 1. 52 vehicles traversing CAM_001 -> CAM_003
+        for _ in range(52):
             plate = self._generate_plate()
             v_type: VehicleType = self.rng.choices(VEHICLE_TYPES, weights=TYPE_WEIGHTS)[0]
-            t1_s = self.rng.uniform(5, 115) / self.speed
+            t1_s = self.rng.uniform(5, 110) / self.speed
             ts1 = window_start + timedelta(seconds=t1_s)
             track_counter += 1
 
@@ -174,8 +179,8 @@ class SyntheticEventGenerator:
                 )
             )
 
-            # Sighting 2 at CAM_003: travel time between 140s and 165s
-            travel_s = self.rng.uniform(140, 165) / self.speed
+            # Sighting 2 at CAM_003: travel time between 130s and 160s (both sightings in 5-min window)
+            travel_s = self.rng.uniform(130, 160) / self.speed
             ts2 = ts1 + timedelta(seconds=travel_s)
             track_counter += 1
 
@@ -195,11 +200,11 @@ class SyntheticEventGenerator:
                 )
             )
 
-        # 2. 26 vehicles passing CAM_001 only (entering side roads / inner circle)
-        for _ in range(26):
+        # 2. 28 vehicles passing CAM_001 only
+        for _ in range(28):
             plate = self._generate_plate()
             v_type: VehicleType = self.rng.choices(VEHICLE_TYPES, weights=TYPE_WEIGHTS)[0]
-            t_s = self.rng.uniform(10, 290) / self.speed
+            t_s = self.rng.uniform(10, 285) / self.speed
             ts = window_start + timedelta(seconds=t_s)
             track_counter += 1
 
@@ -224,11 +229,11 @@ class SyntheticEventGenerator:
                 )
             )
 
-        # 3. 12 vehicles passing CAM_003 only (cross-traffic from Tilak Bridge)
-        for _ in range(12):
+        # 3. 8 vehicles passing CAM_003 only
+        for _ in range(8):
             plate = self._generate_plate()
             v_type: VehicleType = self.rng.choices(VEHICLE_TYPES, weights=TYPE_WEIGHTS)[0]
-            t_s = self.rng.uniform(10, 290) / self.speed
+            t_s = self.rng.uniform(10, 285) / self.speed
             ts = window_start + timedelta(seconds=t_s)
             track_counter += 1
 
@@ -258,6 +263,7 @@ class SyntheticEventGenerator:
     def _generate_background_traffic(self, count: int = 50) -> list[DetectionEvent]:
         events: list[DetectionEvent] = []
         track_counter = 5000
+        rush_start = self.base_time + timedelta(minutes=55)
 
         for _ in range(count):
             plate = self._generate_plate()
@@ -266,14 +272,17 @@ class SyntheticEventGenerator:
             route_len = self.rng.randint(2, 4)
             route = self.graph.generate_random_walk(self.rng, length=route_len)
 
-            # Random start time within 60 minutes
-            start_offset_s = self.rng.randint(0, 3600) / self.speed
+            # Random start time within first 48 minutes so traffic finishes before the rush hour window
+            start_offset_s = self.rng.randint(0, 48 * 60) / self.speed
             vehicle_start = self.base_time + timedelta(seconds=start_offset_s)
 
             elapsed_s = 0.0
             for cam_id, travel_from_prev_s in route:
                 elapsed_s += (travel_from_prev_s / self.speed)
                 ts = vehicle_start + timedelta(seconds=elapsed_s)
+                # Keep background traffic strictly before rush hour window
+                if ts >= rush_start:
+                    break
                 track_counter += 1
 
                 # 20% of background events have unreadable / low-confidence plates

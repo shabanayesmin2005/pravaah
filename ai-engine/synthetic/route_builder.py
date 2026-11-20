@@ -66,6 +66,7 @@ class CameraNetworkGraph:
         Generate a connected route of cameras (camera_id, travel_time_from_prev_s).
         Returns list of (camera_id, delta_seconds_from_previous_camera).
         First camera has delta=0.
+        Prevents A->B->A->B oscillation pattern so SUSPICIOUS_ROUTE is reserved for planted scenarios.
         """
         start_cam = rng.choice(self.camera_ids)
         route: list[tuple[str, int]] = [(start_cam, 0)]
@@ -75,12 +76,21 @@ class CameraNetworkGraph:
             neighbors = list(self.adj.get(curr_cam, {}).keys())
             if not neighbors:
                 break
+
+            # Prevent A->B->A->B oscillation: if route ends in X -> Y -> X, candidate must not be Y
+            if len(route) >= 3 and route[-1][0] == route[-3][0]:
+                forbidden_cam = route[-2][0]
+                candidates = [c for c in neighbors if c != forbidden_cam]
+                if candidates:
+                    neighbors = candidates
+                else:
+                    break
+
             next_cam = rng.choice(neighbors)
             edge = self.adj[curr_cam][next_cam]
 
-            # Choose realistic travel time between min_travel_s and average travel time
-            avg_travel = (edge.min_travel_s + edge.max_travel_s) // 2
-            travel_s = rng.randint(edge.min_travel_s + 10, max(edge.min_travel_s + 15, avg_travel))
+            # Choose realistic travel time between min_travel_s and average/capped travel time
+            travel_s = rng.randint(edge.min_travel_s + 10, min(edge.min_travel_s + 90, edge.max_travel_s))
             route.append((next_cam, travel_s))
             curr_cam = next_cam
 
