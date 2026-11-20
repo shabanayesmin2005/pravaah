@@ -3,13 +3,15 @@ import { env } from '../config/env';
 
 let isConnected = false;
 
-export async function connectDB(): Promise<typeof mongoose> {
+export async function connectDB(uri?: string): Promise<typeof mongoose> {
   if (isConnected) {
     return mongoose;
   }
 
+  const targetUri = uri || process.env.MONGO_TEST_URI || env.MONGO_URI;
+
   try {
-    const conn = await mongoose.connect(env.MONGO_URI, {
+    const conn = await mongoose.connect(targetUri, {
       serverSelectionTimeoutMS: 5000,
       autoIndex: true,
     });

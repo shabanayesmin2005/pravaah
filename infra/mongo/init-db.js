@@ -7,12 +7,13 @@
 // Switch to the application database
 db = db.getSiblingDB(process.env.MONGO_INITDB_DATABASE || 'pravaah');
 
-// Create app user (read/write on pravaah db only)
+// Create app user (read/write on pravaah and pravaah_test dbs)
 db.createUser({
   user: process.env.MONGO_APP_USER || 'pravaah_user',
   pwd: process.env.MONGO_APP_PASSWORD || 'pravaah_pass',
   roles: [
     { role: 'readWrite', db: process.env.MONGO_INITDB_DATABASE || 'pravaah' },
+    { role: 'dbOwner', db: 'pravaah_test' },
   ],
 });
 

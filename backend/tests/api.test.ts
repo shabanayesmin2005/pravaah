@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
+import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { app } from '../src/app';
@@ -20,7 +21,9 @@ let trafficToken: string;
 
 describe('PRAVAAH Backend API - Part A Test Suite', () => {
   beforeAll(async () => {
-    await connectDB();
+    // Use an isolated test database so running tests never touches the live demo database
+    const testMongoUri = env.MONGO_URI.replace('/pravaah?', '/pravaah_test?');
+    await connectDB(testMongoUri);
     await connectRedis();
 
     // Setup test users with known passwords
@@ -80,12 +83,6 @@ describe('PRAVAAH Backend API - Part A Test Suite', () => {
       .post('/api/v1/auth/login')
       .send({ email: 'traffic@test.pravaah.local', password: testPassword });
     trafficToken = trafficRes.body.data.tokens.accessToken;
-  });
-
-  afterAll(async () => {
-    await User.deleteMany({ email: { $regex: '@test.pravaah.local$' } });
-    await disconnectDB();
-    await disconnectRedis();
   });
 
   describe('1. Authentication & Security', () => {
@@ -440,5 +437,21 @@ describe('PRAVAAH Backend API - Part A Test Suite', () => {
       expect(res.body.data).toHaveProperty('earliest');
       expect(res.body.data).toHaveProperty('latest');
     });
+  });
+
+  afterAll(async () => {
+    // Drop the test database entirely so no test state persists
+    if (mongoose.connection.db) {
+      try {
+        await mongoose.connection.db.dropDatabase();
+      } catch {
+        // Fallback: clear all collections
+        await Promise.all(Object.values(mongoose.connection.collections).map(c => c.deleteMany({})));
+      }
+    }
+    // Also ensure test plate is purged from Redis
+    await redis.srem('blacklist:plates', 'TEST99ZZ0001');
+    await disconnectDB();
+    await disconnectRedis();
   });
 });
