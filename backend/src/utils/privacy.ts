@@ -37,8 +37,12 @@ export function sanitizeAlertForRole(alertDoc: any, role: string | null | undefi
       if (meta.plate_text) {
         meta.plate_text = maskPlate(meta.plate_text);
       }
+      delete meta.snapshot_url;
       doc.metadata = meta;
     }
+
+    // Privacy rule: Remove snapshot_url for Analyst as snapshots can reveal readable license plates
+    delete doc.snapshot_url;
   }
 
   return doc;

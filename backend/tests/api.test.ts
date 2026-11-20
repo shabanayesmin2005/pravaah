@@ -137,16 +137,25 @@ describe('PRAVAAH Backend API - Part A Test Suite', () => {
       expect(Array.isArray(res.body.data)).toBe(true);
     });
 
-    it('Police cannot view audit logs (403 Forbidden)', async () => {
+    it('Police cannot view audit logs (403 Forbidden) and records ACCESS_DENIED audit log', async () => {
       const res = await request(app)
         .get('/api/v1/audit-logs')
         .set('Authorization', `Bearer ${policeToken}`);
 
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
+
+      const audit = await AuditLog.findOne({
+        action: 'ACCESS_DENIED',
+        email: 'police@test.pravaah.local',
+      });
+      expect(audit).not.toBeNull();
+      expect(audit?.role).toBe('Police');
+      expect(audit?.target).toContain('/api/v1/audit-logs');
+      expect(audit?.details?.attemptedRole).toBe('Police');
     });
 
-    it('Analyst is blocked from plate search (403 Forbidden with data privacy message)', async () => {
+    it('Analyst is blocked from plate search (403 Forbidden) and records ACCESS_DENIED audit log', async () => {
       const res = await request(app)
         .get('/api/v1/plates/search?q=DL01')
         .set('Authorization', `Bearer ${analystToken}`);
@@ -154,6 +163,14 @@ describe('PRAVAAH Backend API - Part A Test Suite', () => {
       expect(res.status).toBe(403);
       expect(res.body.success).toBe(false);
       expect(res.body.error).toContain('Analyst role is restricted to aggregated analytics only');
+
+      const audit = await AuditLog.findOne({
+        action: 'ACCESS_DENIED',
+        email: 'analyst@test.pravaah.local',
+      });
+      expect(audit).not.toBeNull();
+      expect(audit?.role).toBe('Analyst');
+      expect(audit?.target).toContain('/api/v1/plates/search');
     });
 
     it('Analyst is blocked from vehicle trajectories (403 Forbidden)', async () => {
@@ -260,7 +277,7 @@ describe('PRAVAAH Backend API - Part A Test Suite', () => {
       await Alert.deleteOne({ alert_id: testAlertId });
     });
 
-    it('Police sees full unmasked plate_text in alerts', async () => {
+    it('Police sees full unmasked plate_text and snapshot_url in alerts', async () => {
       const res = await request(app)
         .get(`/api/v1/alerts/${testAlertId}`)
         .set('Authorization', `Bearer ${policeToken}`);
@@ -268,9 +285,10 @@ describe('PRAVAAH Backend API - Part A Test Suite', () => {
       expect(res.status).toBe(200);
       expect(res.body.data.plate_text).toBe('DL01AB1234');
       expect(res.body.data.description).toContain('DL01AB1234');
+      expect(res.body.data.snapshot_url).toBe('http://localhost:4000/snapshots/test.jpg');
     });
 
-    it('Analyst receives masked plate_text (DL01****34) from /alerts/:id', async () => {
+    it('Analyst receives masked plate_text (DL01****34) and snapshot_url is removed from /alerts/:id', async () => {
       const res = await request(app)
         .get(`/api/v1/alerts/${testAlertId}`)
         .set('Authorization', `Bearer ${analystToken}`);
@@ -279,6 +297,24 @@ describe('PRAVAAH Backend API - Part A Test Suite', () => {
       expect(res.body.data.plate_text).toBe('DL01****34');
       expect(res.body.data.description).toContain('DL01****34');
       expect(res.body.data.metadata.plate_text).toBe('DL01****34');
+      // Privacy rule: snapshot_url must be removed for Analyst
+      expect(res.body.data.snapshot_url).toBeUndefined();
+    });
+
+    it('Analyst receives alert list from GET /alerts with snapshot_url removed from every item', async () => {
+      const res = await request(app)
+        .get('/api/v1/alerts')
+        .set('Authorization', `Bearer ${analystToken}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(res.body.data.length).toBeGreaterThan(0);
+      for (const alert of res.body.data) {
+        expect(alert.snapshot_url).toBeUndefined();
+        if (alert.plate_text) {
+          expect(alert.plate_text).toContain('****');
+        }
+      }
     });
 
     it('Police can acknowledge alert and creates ALERT_ACKNOWLEDGE audit log', async () => {

@@ -10,7 +10,8 @@ export type AuditAction =
   | 'BLACKLIST_ADD'
   | 'BLACKLIST_REMOVE'
   | 'ALERT_ACKNOWLEDGE'
-  | 'ALERT_RESOLVE';
+  | 'ALERT_RESOLVE'
+  | 'ACCESS_DENIED';
 
 export interface IAuditLog extends Document {
   id: string;
