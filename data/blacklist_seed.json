@@ -1,34 +1,38 @@
 [
   {
     "plate_text": "MH12CD5678",
-    "reason": "Vehicle involved in hit-and-run incident (FIR No. MH/CR/2026/00412)",
+    "reason": "Sample reason: hit-and-run incident (simulated)",
     "added_by": "admin@pravaah.local",
+    "registered_by": "admin@pravaah.local",
     "added_at": "2026-10-01T08:00:00Z",
     "severity": "HIGH",
-    "agency": "Mumbai Traffic Police"
+    "agency": "Sample Traffic Agency A"
   },
   {
     "plate_text": "DL09XY0023",
-    "reason": "Suspected stolen vehicle – reported missing 2026-09-15",
+    "reason": "Sample reason: vehicle inspection required (simulated)",
     "added_by": "admin@pravaah.local",
+    "registered_by": "admin@pravaah.local",
     "added_at": "2026-09-15T10:30:00Z",
     "severity": "HIGH",
-    "agency": "Delhi Police"
+    "agency": "Sample Traffic Agency B"
   },
   {
     "plate_text": "UP32GH7745",
-    "reason": "Outstanding challans above ₹50,000 – court order for interception",
-    "added_by": "traffic.authority@pravaah.local",
+    "reason": "Sample reason: outstanding challans audit (simulated)",
+    "added_by": "traffic@pravaah.local",
+    "registered_by": "traffic@pravaah.local",
     "added_at": "2026-11-01T09:00:00Z",
     "severity": "MEDIUM",
-    "agency": "UP Traffic Authority"
+    "agency": "Sample Traffic Agency C"
   },
   {
     "plate_text": "HR26DA4512",
-    "reason": "Vehicle linked to narcotics surveillance operation OP-CLEAN-2026",
+    "reason": "Sample reason: special surveillance watchlist (simulated)",
     "added_by": "admin@pravaah.local",
+    "registered_by": "admin@pravaah.local",
     "added_at": "2026-10-20T14:00:00Z",
     "severity": "CRITICAL",
-    "agency": "NCB"
+    "agency": "Sample Enforcement Agency D"
   }
 ]

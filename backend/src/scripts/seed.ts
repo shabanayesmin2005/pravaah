@@ -31,7 +31,7 @@ const DEMO_USERS: DemoUserDef[] = [
   },
   {
     email: 'police@pravaah.local',
-    name: 'Inspector Sharma (Special Cell)',
+    name: 'Demo Police Officer',
     role: 'Police',
     passwordEnv: env.SEED_POLICE_PASSWORD,
   },
